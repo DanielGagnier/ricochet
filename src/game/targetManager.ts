@@ -10,7 +10,9 @@ interface TargetState {
 const maxTargets = 5
 const spawnIntervalMilliseconds = 2000
 const horizontalSpeed = 2
-const forwardSpeed = 1
+const baseForwardSpeed = 1
+const forwardSpeedPerLevel = 1
+const maxForwardSpeed = 3
 const dangerLineZ = 6
 
 export class TargetManager {
@@ -21,6 +23,7 @@ export class TargetManager {
     color: 0xff5722,
   })
   private lastSpawnTimestamp = performance.now()
+  private difficultyLevel = 0
 
   constructor(scene: THREE.Scene) {
     this.scene = scene
@@ -50,7 +53,12 @@ export class TargetManager {
 
     this.targets.length = 0
     this.lastSpawnTimestamp = performance.now()
+    this.difficultyLevel = 0
     this.spawnTarget()
+  }
+
+  setDifficultyLevel(level: number): void {
+    this.difficultyLevel = Math.max(0, Math.floor(level))
   }
 
   update(deltaSeconds: number, timestamp: number): number {
@@ -63,6 +71,10 @@ export class TargetManager {
     }
 
     let targetsReachedPlayer = 0
+    const forwardSpeed = Math.min(
+      baseForwardSpeed + this.difficultyLevel * forwardSpeedPerLevel,
+      maxForwardSpeed,
+    )
 
     for (let index = this.targets.length - 1; index >= 0; index--) {
       const target = this.targets[index]

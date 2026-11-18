@@ -37,6 +37,7 @@ crosshair.setAttribute('aria-hidden', 'true')
 app.appendChild(crosshair)
 
 const startingHealth = 3
+const pointsPerDifficultyLevel = 5
 let health = startingHealth
 const healthDisplay = document.createElement('div')
 healthDisplay.className = 'health-display'
@@ -100,6 +101,7 @@ function shoot() {
 
   score += 1
   scoreDisplay.textContent = `Score: ${score}`
+  targetManager.setDifficultyLevel(Math.floor(score / pointsPerDifficultyLevel))
 }
 
 renderer.domElement.addEventListener('click', shoot)

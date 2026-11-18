@@ -35,6 +35,18 @@ canvas {
   outline-offset: 3px;
 }
 
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 .health-display,
 .game-over {
   position: absolute;

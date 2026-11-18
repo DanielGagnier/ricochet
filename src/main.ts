@@ -1,6 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js'
+import { TargetManager } from './game/targetManager'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 
@@ -30,6 +31,11 @@ lookButton.className = 'look-prompt'
 lookButton.textContent = 'Click to look around (Esc to release)'
 app.appendChild(lookButton)
 
+const crosshair = document.createElement('div')
+crosshair.className = 'crosshair'
+crosshair.setAttribute('aria-hidden', 'true')
+app.appendChild(crosshair)
+
 let health = 3
 const healthDisplay = document.createElement('div')
 healthDisplay.className = 'health-display'
@@ -57,85 +63,46 @@ const sunlight = new THREE.DirectionalLight(0xffffff, 2)
 sunlight.position.set(5, 10, 5)
 scene.add(sunlight)
 
-interface TargetState {
-  mesh: THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>
-  direction: number
-}
-
-const sphereGeometry = new THREE.SphereGeometry(1, 32, 32)
-const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff5722 })
-
-function createTarget(): TargetState {
-  const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
-  mesh.position.set(Math.random() * 8 - 4, 1.7, -3 - Math.random() * 6)
-  scene.add(mesh)
-
-  return {
-    mesh,
-    direction: Math.random() < 0.5 ? -1 : 1,
-  }
-}
-
-const targets: TargetState[] = []
-const maxTargets = 5
-const spawnIntervalMilliseconds = 2000
-const forwardSpeed = 1
-const dangerLineZ = 6
-
-function spawnTarget() {
-  targets.push(createTarget())
-}
-
-spawnTarget()
+const targetManager = new TargetManager(scene)
 
 let previousTimestamp = performance.now()
-let lastSpawnTimestamp = previousTimestamp
-const horizontalSpeed = 2
 let gameOver = false
+const raycaster = new THREE.Raycaster()
+const aimPoint = new THREE.Vector2(0, 0)
+
+function shoot() {
+  if (!controls.isLocked || gameOver) {
+    return
+  }
+
+  raycaster.setFromCamera(aimPoint, camera)
+  const hit = raycaster.intersectObjects(
+    targetManager.getMeshes(),
+    false,
+  )[0]
+
+  if (!hit) {
+    return
+  }
+
+  targetManager.removeTarget(hit.object)
+}
+
+renderer.domElement.addEventListener('click', shoot)
 
 function animate(timestamp: number) {
   const deltaSeconds = (timestamp - previousTimestamp) / 1000
   previousTimestamp = timestamp
 
-  if (
-    !gameOver &&
-    targets.length < maxTargets &&
-    timestamp - lastSpawnTimestamp >= spawnIntervalMilliseconds
-  ) {
-    spawnTarget()
-    lastSpawnTimestamp = timestamp
-  }
+  const targetsReachedPlayer = targetManager.update(deltaSeconds, timestamp)
 
-  for (let index = targets.length - 1; index >= 0; index--) {
-    const target = targets[index]
+  if (targetsReachedPlayer > 0) {
+    health = Math.max(0, health - targetsReachedPlayer)
+    healthDisplay.textContent = `Health: ${health}`
 
-    target.mesh.position.x += target.direction * horizontalSpeed * deltaSeconds
-    target.mesh.position.z = Math.min(
-      target.mesh.position.z + forwardSpeed * deltaSeconds,
-      dangerLineZ,
-    )
-
-    if (target.mesh.position.z >= dangerLineZ) {
-      scene.remove(target.mesh)
-      targets.splice(index, 1)
-      health -= 1
-      healthDisplay.textContent = `Health: ${health}`
-
-      if (health === 0) {
-        gameOver = true
-        gameOverDisplay.hidden = false
-        break
-      }
-
-      continue
-    }
-
-    if (target.mesh.position.x <= -4) {
-      target.mesh.position.x = -4
-      target.direction = 1
-    } else if (target.mesh.position.x >= 4) {
-      target.mesh.position.x = 4
-      target.direction = -1
+    if (health === 0) {
+      gameOver = true
+      gameOverDisplay.hidden = false
     }
   }
 

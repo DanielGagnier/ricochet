@@ -83,6 +83,20 @@ let previousTimestamp = performance.now()
 let gameOver = false
 const raycaster = new THREE.Raycaster()
 const aimPoint = new THREE.Vector2(0, 0)
+let shotFeedbackTimeout: number | undefined
+
+function showShotFeedback(result: 'hit' | 'miss') {
+  if (shotFeedbackTimeout !== undefined) {
+    window.clearTimeout(shotFeedbackTimeout)
+  }
+
+  crosshair.classList.remove('hit', 'miss')
+  crosshair.classList.add(result)
+  shotFeedbackTimeout = window.setTimeout(() => {
+    crosshair.classList.remove(result)
+    shotFeedbackTimeout = undefined
+  }, 180)
+}
 
 function shoot() {
   if (!controls.isLocked || gameOver) {
@@ -96,9 +110,11 @@ function shoot() {
   )[0]
 
   if (!hit || !targetManager.removeTarget(hit.object)) {
+    showShotFeedback('miss')
     return
   }
 
+  showShotFeedback('hit')
   score += 1
   scoreDisplay.textContent = `Score: ${score}`
   targetManager.setDifficultyLevel(Math.floor(score / pointsPerDifficultyLevel))

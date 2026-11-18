@@ -44,6 +44,23 @@ const sunlight = new THREE.DirectionalLight(0xffffff, 2)
 sunlight.position.set(5, 10, 5)
 scene.add(sunlight)
 
+const sphere = new THREE.SphereGeometry(1, 32, 32)
+const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff5722 })
+const sphereMesh = new THREE.Mesh(sphere, sphereMaterial)
+sphereMesh.position.set(0, 1.7, -4)
+scene.add(sphereMesh)
+
+const start_time = performance.now()
+function animate(timestamp: number) {
+  const elapsed_time = (timestamp - start_time) / 1000
+  sphereMesh.position.x = Math.sin(elapsed_time) * 4
+  sphereMesh.position.z = Math.cos(elapsed_time) * 4
+  requestAnimationFrame(animate)
+  render()
+}
+requestAnimationFrame(animate)
+
+
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(20, 20),
   new THREE.MeshStandardMaterial({ color: 0x263238, roughness: 1 }),

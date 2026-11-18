@@ -52,9 +52,9 @@ interface TargetState {
 const sphereGeometry = new THREE.SphereGeometry(1, 32, 32)
 const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff5722 })
 
-function createTarget(z: number): TargetState {
+function createTarget(): TargetState {
   const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
-  mesh.position.set(Math.random() * 8 - 4, 1.7, z)
+  mesh.position.set(Math.random() * 8 - 4, 1.7, -3 - Math.random() * 6)
   scene.add(mesh)
 
   return {
@@ -63,14 +63,31 @@ function createTarget(z: number): TargetState {
   }
 }
 
-const targets = [-3, -6, -9].map(createTarget)
+const targets: TargetState[] = []
+const maxTargets = 5
+const spawnIntervalMilliseconds = 2000
+
+function spawnTarget() {
+  targets.push(createTarget())
+}
+
+spawnTarget()
 
 let previousTimestamp = performance.now()
+let lastSpawnTimestamp = previousTimestamp
 const horizontalSpeed = 2
 
 function animate(timestamp: number) {
   const deltaSeconds = (timestamp - previousTimestamp) / 1000
   previousTimestamp = timestamp
+
+  if (
+    targets.length < maxTargets &&
+    timestamp - lastSpawnTimestamp >= spawnIntervalMilliseconds
+  ) {
+    spawnTarget()
+    lastSpawnTimestamp = timestamp
+  }
 
   for (const target of targets) {
     target.mesh.position.x += target.direction * horizontalSpeed * deltaSeconds

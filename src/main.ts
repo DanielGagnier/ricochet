@@ -1,5 +1,6 @@
 import './style.css'
 import * as THREE from 'three'
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 
@@ -16,13 +17,26 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100,
 )
-camera.position.set(0, 8, 12)
-camera.lookAt(0, 0, 0)
+camera.position.set(0, 1.7, 8)
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 app.appendChild(renderer.domElement)
+
+const controls = new PointerLockControls(camera, renderer.domElement)
+const lookButton = document.createElement('button')
+lookButton.className = 'look-prompt'
+lookButton.textContent = 'Click to look around (Esc to release)'
+app.appendChild(lookButton)
+
+lookButton.addEventListener('click', () => controls.lock())
+controls.addEventListener('lock', () => {
+  lookButton.hidden = true
+})
+controls.addEventListener('unlock', () => {
+  lookButton.hidden = false
+})
 
 scene.add(new THREE.AmbientLight(0xffffff, 1.5))
 
@@ -41,12 +55,17 @@ const grid = new THREE.GridHelper(20, 20, 0x82939f, 0x455a64)
 grid.position.y = 0.01
 scene.add(grid)
 
+function render() {
+  renderer.render(scene, camera)
+}
+
 function resizeRenderer() {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
-  renderer.render(scene, camera)
+  render()
 }
 
+controls.addEventListener('change', render)
 window.addEventListener('resize', resizeRenderer)
-renderer.render(scene, camera)
+render()

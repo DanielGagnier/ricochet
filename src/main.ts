@@ -43,6 +43,13 @@ healthDisplay.setAttribute('role', 'status')
 healthDisplay.textContent = `Health: ${health}`
 app.appendChild(healthDisplay)
 
+let score = 0
+const scoreDisplay = document.createElement('div')
+scoreDisplay.className = 'score-display'
+scoreDisplay.setAttribute('role', 'status')
+scoreDisplay.textContent = `Score: ${score}`
+app.appendChild(scoreDisplay)
+
 const gameOverDisplay = document.createElement('div')
 gameOverDisplay.className = 'game-over'
 gameOverDisplay.textContent = 'Game over'
@@ -81,6 +88,10 @@ function shoot() {
     false,
   )[0]
 
+  if(hit) {
+    score = score + 1
+    scoreDisplay.textContent = `Score: ${score}`
+  }
   if (!hit) {
     return
   }

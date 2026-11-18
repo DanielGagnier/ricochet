@@ -30,6 +30,19 @@ lookButton.className = 'look-prompt'
 lookButton.textContent = 'Click to look around (Esc to release)'
 app.appendChild(lookButton)
 
+let health = 3
+const healthDisplay = document.createElement('div')
+healthDisplay.className = 'health-display'
+healthDisplay.setAttribute('role', 'status')
+healthDisplay.textContent = `Health: ${health}`
+app.appendChild(healthDisplay)
+
+const gameOverDisplay = document.createElement('div')
+gameOverDisplay.className = 'game-over'
+gameOverDisplay.textContent = 'Game over'
+gameOverDisplay.hidden = true
+app.appendChild(gameOverDisplay)
+
 lookButton.addEventListener('click', () => controls.lock())
 controls.addEventListener('lock', () => {
   lookButton.hidden = true
@@ -66,6 +79,8 @@ function createTarget(): TargetState {
 const targets: TargetState[] = []
 const maxTargets = 5
 const spawnIntervalMilliseconds = 2000
+const forwardSpeed = 1
+const dangerLineZ = 6
 
 function spawnTarget() {
   targets.push(createTarget())
@@ -76,12 +91,14 @@ spawnTarget()
 let previousTimestamp = performance.now()
 let lastSpawnTimestamp = previousTimestamp
 const horizontalSpeed = 2
+let gameOver = false
 
 function animate(timestamp: number) {
   const deltaSeconds = (timestamp - previousTimestamp) / 1000
   previousTimestamp = timestamp
 
   if (
+    !gameOver &&
     targets.length < maxTargets &&
     timestamp - lastSpawnTimestamp >= spawnIntervalMilliseconds
   ) {
@@ -89,8 +106,29 @@ function animate(timestamp: number) {
     lastSpawnTimestamp = timestamp
   }
 
-  for (const target of targets) {
+  for (let index = targets.length - 1; index >= 0; index--) {
+    const target = targets[index]
+
     target.mesh.position.x += target.direction * horizontalSpeed * deltaSeconds
+    target.mesh.position.z = Math.min(
+      target.mesh.position.z + forwardSpeed * deltaSeconds,
+      dangerLineZ,
+    )
+
+    if (target.mesh.position.z >= dangerLineZ) {
+      scene.remove(target.mesh)
+      targets.splice(index, 1)
+      health -= 1
+      healthDisplay.textContent = `Health: ${health}`
+
+      if (health === 0) {
+        gameOver = true
+        gameOverDisplay.hidden = false
+        break
+      }
+
+      continue
+    }
 
     if (target.mesh.position.x <= -4) {
       target.mesh.position.x = -4
@@ -102,7 +140,9 @@ function animate(timestamp: number) {
   }
 
   render()
-  requestAnimationFrame(animate)
+  if (!gameOver) {
+    requestAnimationFrame(animate)
+  }
 }
 
 requestAnimationFrame(animate)

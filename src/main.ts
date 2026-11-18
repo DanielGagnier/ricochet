@@ -44,33 +44,48 @@ const sunlight = new THREE.DirectionalLight(0xffffff, 2)
 sunlight.position.set(5, 10, 5)
 scene.add(sunlight)
 
-const sphere = new THREE.SphereGeometry(1, 32, 32)
-const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff5722 })
-const sphereMesh = new THREE.Mesh(sphere, sphereMaterial)
-sphereMesh.position.set(0, 1.7, -4)
-scene.add(sphereMesh)
+interface TargetState {
+  mesh: THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>
+  direction: number
+}
 
-let direction = -1
+const sphereGeometry = new THREE.SphereGeometry(1, 32, 32)
+const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff5722 })
+
+function createTarget(z: number): TargetState {
+  const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
+  mesh.position.set(Math.random() * 8 - 4, 1.7, z)
+  scene.add(mesh)
+
+  return {
+    mesh,
+    direction: Math.random() < 0.5 ? -1 : 1,
+  }
+}
+
+const targets = [-3, -6, -9].map(createTarget)
+
 let previousTimestamp = performance.now()
 const horizontalSpeed = 2
 
 function animate(timestamp: number) {
-const deltaSeconds = (timestamp - previousTimestamp) / 1000
-previousTimestamp = timestamp
+  const deltaSeconds = (timestamp - previousTimestamp) / 1000
+  previousTimestamp = timestamp
 
-sphereMesh.position.x += direction * horizontalSpeed * deltaSeconds
+  for (const target of targets) {
+    target.mesh.position.x += target.direction * horizontalSpeed * deltaSeconds
 
-if (sphereMesh.position.x <= -4) {
-sphereMesh.position.x = -4
-direction = 1
-} else if (sphereMesh.position.x >= 4) {
-sphereMesh.position.x = 4
-direction = -1
-}
+    if (target.mesh.position.x <= -4) {
+      target.mesh.position.x = -4
+      target.direction = 1
+    } else if (target.mesh.position.x >= 4) {
+      target.mesh.position.x = 4
+      target.direction = -1
+    }
+  }
 
-sphereMesh.position.y = 1.7
-render()
-requestAnimationFrame(animate)
+  render()
+  requestAnimationFrame(animate)
 }
 
 requestAnimationFrame(animate)

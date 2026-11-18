@@ -84,12 +84,35 @@ let gameOver = false
 const raycaster = new THREE.Raycaster()
 const aimPoint = new THREE.Vector2(0, 0)
 let shotFeedbackTimeout: number | undefined
+let audioContext: AudioContext | undefined
+
+function playShotSound(result: 'hit' | 'miss') {
+  if (!audioContext) {
+    audioContext = new AudioContext()
+  }
+
+  const oscillator = audioContext.createOscillator()
+  const gain = audioContext.createGain()
+  const now = audioContext.currentTime
+  const duration = 0.12
+
+  oscillator.type = 'sine'
+  oscillator.frequency.setValueAtTime(result === 'hit' ? 880 : 220, now)
+  gain.gain.setValueAtTime(0.04, now)
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+  oscillator.connect(gain)
+  gain.connect(audioContext.destination)
+  oscillator.start(now)
+  oscillator.stop(now + duration)
+}
 
 function showShotFeedback(result: 'hit' | 'miss') {
   if (shotFeedbackTimeout !== undefined) {
     window.clearTimeout(shotFeedbackTimeout)
   }
 
+  playShotSound(result)
   crosshair.classList.remove('hit', 'miss')
   crosshair.classList.add(result)
   shotFeedbackTimeout = window.setTimeout(() => {

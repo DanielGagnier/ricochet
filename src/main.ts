@@ -196,6 +196,27 @@ const grid = new THREE.GridHelper(20, 20, 0x82939f, 0x455a64)
 grid.position.y = 0.01
 scene.add(grid)
 
+const wallMaterial = new THREE.MeshStandardMaterial({
+  color: 0x455a64,
+  roughness: 0.9,
+})
+
+const sideWallGeometry = new THREE.BoxGeometry(0.3, 4, 20)
+const leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial)
+leftWall.position.set(-5, 2, 0)
+scene.add(leftWall)
+
+const rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial)
+rightWall.position.set(5, 2, 0)
+scene.add(rightWall)
+
+const backWall = new THREE.Mesh(
+  new THREE.BoxGeometry(10, 4, 0.3),
+  wallMaterial,
+)
+backWall.position.set(0, 2, -10)
+scene.add(backWall)
+
 function render() {
   renderer.render(scene, camera)
 }

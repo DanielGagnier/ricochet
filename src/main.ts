@@ -36,7 +36,8 @@ crosshair.className = 'crosshair'
 crosshair.setAttribute('aria-hidden', 'true')
 app.appendChild(crosshair)
 
-let health = 3
+const startingHealth = 3
+let health = startingHealth
 const healthDisplay = document.createElement('div')
 healthDisplay.className = 'health-display'
 healthDisplay.setAttribute('role', 'status')
@@ -55,6 +56,11 @@ gameOverDisplay.className = 'game-over'
 gameOverDisplay.textContent = 'Game over'
 gameOverDisplay.hidden = true
 app.appendChild(gameOverDisplay)
+
+const restartButton = document.createElement('button')
+restartButton.className = 'restart-button'
+restartButton.textContent = 'Restart'
+gameOverDisplay.appendChild(restartButton)
 
 lookButton.addEventListener('click', () => controls.lock())
 controls.addEventListener('lock', () => {
@@ -88,15 +94,12 @@ function shoot() {
     false,
   )[0]
 
-  if(hit) {
-    score = score + 1
-    scoreDisplay.textContent = `Score: ${score}`
-  }
-  if (!hit) {
+  if (!hit || !targetManager.removeTarget(hit.object)) {
     return
   }
 
-  targetManager.removeTarget(hit.object)
+  score += 1
+  scoreDisplay.textContent = `Score: ${score}`
 }
 
 renderer.domElement.addEventListener('click', shoot)
@@ -114,6 +117,7 @@ function animate(timestamp: number) {
     if (health === 0) {
       gameOver = true
       gameOverDisplay.hidden = false
+      controls.unlock()
     }
   }
 
@@ -122,6 +126,20 @@ function animate(timestamp: number) {
     requestAnimationFrame(animate)
   }
 }
+
+function restartGame() {
+  targetManager.reset()
+  health = startingHealth
+  healthDisplay.textContent = `Health: ${health}`
+  score = 0
+  scoreDisplay.textContent = `Score: ${score}`
+  gameOver = false
+  gameOverDisplay.hidden = true
+  previousTimestamp = performance.now()
+  requestAnimationFrame(animate)
+}
+
+restartButton.addEventListener('click', restartGame)
 
 requestAnimationFrame(animate)
 

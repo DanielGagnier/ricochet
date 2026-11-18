@@ -43,6 +43,16 @@ export class TargetManager {
     return true
   }
 
+  reset(): void {
+    for (const target of this.targets) {
+      this.scene.remove(target.mesh)
+    }
+
+    this.targets.length = 0
+    this.lastSpawnTimestamp = performance.now()
+    this.spawnTarget()
+  }
+
   update(deltaSeconds: number, timestamp: number): number {
     if (
       this.targets.length < maxTargets &&

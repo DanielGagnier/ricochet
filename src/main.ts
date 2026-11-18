@@ -50,14 +50,29 @@ const sphereMesh = new THREE.Mesh(sphere, sphereMaterial)
 sphereMesh.position.set(0, 1.7, -4)
 scene.add(sphereMesh)
 
-const start_time = performance.now()
+let direction = -1
+let previousTimestamp = performance.now()
+const horizontalSpeed = 2
+
 function animate(timestamp: number) {
-  const elapsed_time = (timestamp - start_time) / 1000
-  sphereMesh.position.x = Math.sin(elapsed_time) * 4
-  sphereMesh.position.z = Math.cos(elapsed_time) * 4
-  requestAnimationFrame(animate)
-  render()
+const deltaSeconds = (timestamp - previousTimestamp) / 1000
+previousTimestamp = timestamp
+
+sphereMesh.position.x += direction * horizontalSpeed * deltaSeconds
+
+if (sphereMesh.position.x <= -4) {
+sphereMesh.position.x = -4
+direction = 1
+} else if (sphereMesh.position.x >= 4) {
+sphereMesh.position.x = 4
+direction = -1
 }
+
+sphereMesh.position.y = 1.7
+render()
+requestAnimationFrame(animate)
+}
+
 requestAnimationFrame(animate)
 
 
